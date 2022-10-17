@@ -12,24 +12,16 @@ from models.city import City
 class State(BaseModel, Base):
     """ State class """
 
-    __tablename__ = "states"
-
+     __tablename__ = "states"
     name = Column(String(128), nullable=False)
-    cities = relationship("City", cascade="all, delete, delete-orphan",
-                          backref="state")
+    cities = relationship("City",  backref="state", cascade="delete")
 
-    @property
-    def cities(self):
-        """Get cities by state"""
-        city_list = []
-        result = []
-        cities = models.storage.all()
-        for key in cities:
-            city = key.replace('.', ' ')
-            city = shlex.split(city)
-            if (city[0] == 'City'):
-                city_list.append(cities[key])
-        for i in city_list:
-            if (i.state_id == self.id):
-                result.append(i)
-        return (result)
+     if getenv("HBNB_TYPE_STORAGE") != "db":
+        @property
+        def cities(self):
+            """Get a list of all related City objects."""
+            city_list = []
+            for city in list(models.storage.all(City).values()):
+                if city.state_id == self.id:
+                    city_list.append(city)
+            return city_list
